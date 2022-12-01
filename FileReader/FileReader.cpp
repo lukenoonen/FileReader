@@ -5,6 +5,45 @@
 //===========================================================================//
 
 #include "FileReader.h"
+#include <string>
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output: true on successful write of string, false otherwise
+//-----------------------------------------------------------------------------
+bool UTIL_Write( CFile *pFile, char *&sData )
+{
+	unsigned int uiSize = (unsigned int)strlen( sData );
+	if (!UTIL_Write( pFile, uiSize ))
+		return false;
+
+	if (!pFile->WriteBytes( sData, sizeof( char ) * uiSize ))
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output: true on successful read of string, false otherwise
+// Note: dynamically allocates memory for string, be sure to delete!
+//-----------------------------------------------------------------------------
+bool UTIL_Read( CFile *pFile, char *&sData )
+{
+	unsigned int uiSize;
+	if (!UTIL_Read( pFile, uiSize ))
+		return false;
+
+	sData = new char[uiSize + 1];
+	if (!pFile->ReadBytes( sData, sizeof( char ) * uiSize ))
+	{
+		delete[] sData;
+		return false;
+	}
+
+	sData[uiSize] = '\0';
+	return true;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -93,7 +132,7 @@ bool CFile::Buffer( char *&sBuffer )
 	m_fFileStream.seekg( spInitialPosition, std::ios_base::beg );
 
 	sBuffer = new char[uiSize + 1];
-	if (!Read( sBuffer, sizeof( char ) * uiSize ))
+	if (!ReadBytes( sBuffer, sizeof( char ) * uiSize ))
 	{
 		delete[] sBuffer;
 		return false;
@@ -107,15 +146,15 @@ bool CFile::Buffer( char *&sBuffer )
 // Purpose: 
 // Output: true on successful file write, false otherwise
 //-----------------------------------------------------------------------------
-bool CFile::Write( void *pData, unsigned int uiSize )
+bool CFile::WriteBytes( void *pData, unsigned int uiSize )
 {
-	return m_fFileStream.read( (char *)(pData), uiSize ) ? true : false; // Maybe perform checks to see if the file can be written to
+	return m_fFileStream.write( (char *)(pData), uiSize ) ? true : false; // Maybe perform checks to see if the file can be written to
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: true on successful file read, false otherwise
 //-----------------------------------------------------------------------------
-bool CFile::Read( void *pData, unsigned int uiSize )
+bool CFile::ReadBytes( void *pData, unsigned int uiSize )
 {
-	return m_fFileStream.write( (char *)(pData), uiSize ) ? true : false; // Maybe perform checks to see if the file can be read from
+	return m_fFileStream.read( (char *)(pData), uiSize ) ? true : false; // Maybe perform checks to see if the file can be read from
 }

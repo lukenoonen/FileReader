@@ -26,8 +26,12 @@ class CFile;
 template <class T> bool UTIL_Write( CFile *pFile, T &tData );
 template <class T> bool UTIL_Write( CFile *pFile, std::vector<T> &tData );
 
+bool UTIL_Write( CFile *pFile, char *&sData );
+
 template <class T> bool UTIL_Read( CFile *pFile, T &tData );
 template <class T> bool UTIL_Read( CFile *pFile, std::vector<T> &tData );
+
+bool UTIL_Read( CFile *pFile, char *&sData );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -61,9 +65,8 @@ public:
 	template <class T> bool Write( T &tData );
 	template <class T> bool Read( T &tData );
 
-private:
-	bool Write( void *pData, unsigned int uiSize );
-	bool Read( void *pData, unsigned int uiSize );
+	bool WriteBytes( void *pData, unsigned int uiSize );
+	bool ReadBytes( void *pData, unsigned int uiSize );
 
 private:
 	std::fstream m_fFileStream;
@@ -93,7 +96,7 @@ template <class T> bool CFile::Read( T &tData )
 //-----------------------------------------------------------------------------
 template <class T> bool UTIL_Write( CFile *pFile, T &tData )
 {
-	return pFile->Write( &tData, sizeof( T ) );
+	return pFile->WriteBytes( &tData, sizeof( T ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -103,7 +106,7 @@ template <class T> bool UTIL_Write( CFile *pFile, T &tData )
 template <class T> bool UTIL_Write( CFile *pFile, std::vector<T> &tData )
 {
 	unsigned int uiSize = tData.size();
-	if (!pFile->Write( &uiSize, sizeof( unsigned int ) ))
+	if (!UTIL_Write( pFile, uiSize ))
 		return false;
 
 	for (unsigned int i = 0; i < uiSize; i++)
@@ -121,7 +124,7 @@ template <class T> bool UTIL_Write( CFile *pFile, std::vector<T> &tData )
 //-----------------------------------------------------------------------------
 template <class T> bool UTIL_Read( CFile *pFile, T &tData )
 {
-	return pFile->Read( &tData, sizeof( T ) );
+	return pFile->ReadBytes( &tData, sizeof( T ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -131,14 +134,14 @@ template <class T> bool UTIL_Read( CFile *pFile, T &tData )
 template <class T> bool UTIL_Read( CFile *pFile, std::vector<T> &tData )
 {
 	unsigned int uiSize;
-	if (!pFile->Read( &uiSize, sizeof( unsigned int ) ))
+	if (!UTIL_Read( pFile, uiSize ))
 		return false;
 
 	tData.resize( uiSize );
 
 	for (unsigned int i = 0; i < uiSize; i++)
 	{
-		if (!UTIL_Write( pFile, tData[i] ))
+		if (!UTIL_Read( pFile, tData[i] ))
 			return false;
 	}
 
